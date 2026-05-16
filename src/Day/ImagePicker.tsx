@@ -95,6 +95,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
   const urlImage = useRef('');
   const uuidFilePicker = Date.now().toString(20);
   const imageName = useRef('download');
+  const userChangedImage = useRef(false);
   // const mounted = useRef(false);
 
   useEffect(() => {
@@ -136,7 +137,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
   }
 
   useEffect(() => {
-    imageChanged(imageSrc);
+    if (userChangedImage.current) {
+      userChangedImage.current = false;
+      imageChanged(imageSrc);
+    }
   }, [imageSrc]);
 
   function processConfig() {
@@ -214,6 +218,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
         originImageSrc: newState.originImageSrc as string,
       });
       setState(newState);
+      userChangedImage.current = true;
       setImageSrc(newImageSrc);
       setLoadImage(true);
     };
@@ -273,6 +278,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
   }
 
   function onRemove() {
+    userChangedImage.current = true;
     setImageSrc(null);
     setLoadImage(false);
     const newState: IState = {
