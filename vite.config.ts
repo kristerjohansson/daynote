@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import babel from '@rolldown/plugin-babel';
 import { readFileSync } from 'node:fs';
@@ -12,5 +12,9 @@ export default defineConfig({
   plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
+  },
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.ts'],
   },
 });
