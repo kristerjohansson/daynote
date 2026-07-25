@@ -131,36 +131,64 @@ function normalizeLegacyField(value: string | undefined): string {
   return value.trim().toLowerCase() === '(null)' ? '' : value;
 }
 
+function hexStringToBytes(hex: string): Uint8Array | undefined {
+  if (hex.length === 0 || hex.length % 2 !== 0 || /^[0-9a-fA-F]+$/.test(hex) === false) {
+    return undefined;
+  }
+
+  const bytes = new Uint8Array(hex.length / 2);
+
+  for (let i = 0; i < bytes.length; i += 1) {
+    bytes[i] = Number.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+  }
+
+  return bytes;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  const chunkSize = 0x2000;
+  let binaryStr = '';
+
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    const chunk = bytes.subarray(offset, offset + chunkSize);
+    binaryStr += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binaryStr);
+}
+
 function convertLegacyPhoto(photo: string): string {
   if (photo.length === 0 || photo.startsWith('data:') || photo.startsWith('http://') || photo.startsWith('https://')) {
     return photo;
   }
 
-  // Legacy Objective-C iOS apps stored photos as raw base64-encoded binary image data.
+  // Legacy Objective-C iOS apps exported photos as a hex dump of the raw NSData image bytes
+  // (NSData.description with angle brackets/spaces stripped), not base64.
   // Detect the image format from the binary magic bytes and construct a proper data URI.
-  try {
-    const binaryStr = atob(photo);
-    const b = (i: number) => binaryStr.charCodeAt(i);
+  const bytes = hexStringToBytes(photo);
 
-    let mimeType: string;
-
-    if (b(0) === 0xff && b(1) === 0xd8 && b(2) === 0xff) {
-      mimeType = 'image/jpeg';
-    } else if (b(0) === 0x89 && b(1) === 0x50 && b(2) === 0x4e && b(3) === 0x47) {
-      mimeType = 'image/png';
-    } else if (b(0) === 0x42 && b(1) === 0x4d) {
-      mimeType = 'image/bmp';
-    } else if (b(0) === 0x47 && b(1) === 0x49 && b(2) === 0x46) {
-      mimeType = 'image/gif';
-    } else {
-      // Unknown format; default to JPEG as a best guess for iOS-sourced photos.
-      mimeType = 'image/jpeg';
-    }
-
-    return `data:${mimeType};base64,${photo}`;
-  } catch {
+  if (bytes === undefined || bytes.length < 4) {
     return photo;
   }
+
+  const b = (i: number) => bytes[i];
+
+  let mimeType: string;
+
+  if (b(0) === 0xff && b(1) === 0xd8 && b(2) === 0xff) {
+    mimeType = 'image/jpeg';
+  } else if (b(0) === 0x89 && b(1) === 0x50 && b(2) === 0x4e && b(3) === 0x47) {
+    mimeType = 'image/png';
+  } else if (b(0) === 0x42 && b(1) === 0x4d) {
+    mimeType = 'image/bmp';
+  } else if (b(0) === 0x47 && b(1) === 0x49 && b(2) === 0x46) {
+    mimeType = 'image/gif';
+  } else {
+    // Unknown format; default to JPEG as a best guess for iOS-sourced photos.
+    mimeType = 'image/jpeg';
+  }
+
+  return `data:${mimeType};base64,${bytesToBase64(bytes)}`;
 }
 
 function parseLegacyAnniversaryWithYear(value: string):
