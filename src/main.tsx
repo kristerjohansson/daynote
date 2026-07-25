@@ -6,12 +6,10 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import './index.css';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import App from './App';
 import ErrorPage from './ErrorPage';
-import Week, { loader as weekLoader } from './Week';
-import Day, { loader as dayLoader } from './Day';
-import Config, { loader as configLoader } from './Config';
-import Search, { loader as searchLoader } from './Search';
 import { registerServiceWorker } from './serviceWorkerRegistration';
 
 const router = createBrowserRouter([
@@ -19,36 +17,35 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     errorElement: <ErrorPage />,
+    hydrateFallbackElement: (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    ),
     children: [
       {
         path: '',
-        element: <Week />,
-        loader: weekLoader,
+        lazy: () => import('./Week').then((m) => ({ Component: m.default, loader: m.loader })),
       },
       {
         path: 'week',
-        element: <Week />,
-        loader: weekLoader,
+        lazy: () => import('./Week').then((m) => ({ Component: m.default, loader: m.loader })),
       },
       {
         path: 'week/:week',
-        element: <Week />,
-        loader: weekLoader,
+        lazy: () => import('./Week').then((m) => ({ Component: m.default, loader: m.loader })),
       },
       {
         path: 'day/:day',
-        element: <Day />,
-        loader: dayLoader,
+        lazy: () => import('./Day').then((m) => ({ Component: m.default, loader: m.loader })),
       },
       {
         path: 'config',
-        element: <Config />,
-        loader: configLoader,
+        lazy: () => import('./Config').then((m) => ({ Component: m.default, loader: m.loader })),
       },
       {
         path: 'search',
-        element: <Search />,
-        loader: searchLoader,
+        lazy: () => import('./Search').then((m) => ({ Component: m.default, loader: m.loader })),
       },
     ],
   },
