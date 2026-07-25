@@ -252,7 +252,7 @@ const Week: React.FC = () => {
         </DialogActions>
       </Dialog>
       <Divider orientation="horizontal" variant="fullWidth" sx={{ width: '100%' }} />
-      <Stack sx={{ alignItems: 'center', justifyContent: 'space-evenly', height: '100%' }}>
+      <Stack sx={{ width: '100%', flex: '1 1 auto', overflowY: 'auto', gap: 2, py: 1 }}>
         <DayRow
           key="monday"
           date={weekDates[0]}
